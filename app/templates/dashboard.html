@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>School Operations Agent Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+<div class="container mx-auto p-6 max-w-7xl">
+
+<!-- ============================== LOGIN / REGISTER ============================== -->
+<section id="auth-section" class="max-w-md mx-auto bg-slate-800 rounded-xl p-6 shadow-2xl mt-12 border border-slate-700">
+  <h1 class="text-2xl font-bold text-indigo-400 mb-2">School Operations Platform</h1>
+  <p class="text-sm text-slate-400 mb-6">Sign in or register your school to get started.</p>
+
+  <div class="flex gap-2 mb-4">
+    <button id="tab-login" class="flex-1 py-2 rounded bg-indigo-600 text-sm font-semibold">Login</button>
+    <button id="tab-register" class="flex-1 py-2 rounded bg-slate-700 text-sm font-semibold">Register school</button>
+  </div>
+
+  <form id="login-form" class="space-y-3">
+    <input type="email" id="login-email" placeholder="admin@yourschool.edu" required
+           class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+    <input type="password" id="login-password" placeholder="Password" required
+           class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+    <button class="w-full bg-indigo-600 hover:bg-indigo-700 py-2 rounded font-bold text-sm">Sign in</button>
+  </form>
+
+  <form id="register-form" class="space-y-3 hidden">
+    <input type="text" id="reg-school" placeholder="School name (e.g. Lincoln High)" required
+           class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+    <input type="text" id="reg-admin-name" placeholder="Your name" required
+           class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+    <input type="email" id="reg-email" placeholder="admin@yourschool.edu" required
+           class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+    <input type="password" id="reg-password" placeholder="Password (min 8 chars)" required minlength="8"
+           class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm">
+    <button class="w-full bg-emerald-600 hover:bg-emerald-700 py-2 rounded font-bold text-sm">Register school</button>
+  </form>
+
+  <p id="auth-msg" class="text-xs mt-4 text-rose-400"></p>
+</section>
+
+<!-- ============================== DASHBOARD ============================== -->
+<section id="dashboard" class="hidden">
+  <header class="flex justify-between items-center border-b border-slate-700 pb-4 mb-8">
+    <div>
+      <h1 class="text-3xl font-extrabold text-indigo-400" id="school-name">School Operations Platform</h1>
+      <p class="text-slate-400 text-sm mt-1">Role-aware admin dashboard</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 text-right">
+        <span class="text-xs text-slate-400 block uppercase">User</span>
+        <span class="text-sm font-bold text-emerald-400" id="user-info">--</span>
+      </div>
+      <button id="logout-btn" class="bg-rose-700 hover:bg-rose-800 text-xs px-3 py-2 rounded">Logout</button>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Left -->
+    <div class="space-y-6">
+      <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">📁 Document ingestion</h2>
+        <label class="block text-xs uppercase tracking-wider mb-1 text-slate-400">Classroom ID</label>
+        <input id="classroom-id" placeholder="paste classroom UUID"
+               class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs mb-3">
+        <button id="list-classes" class="text-xs text-indigo-300 underline mb-3">List my classrooms</button>
+        <ul id="class-list" class="text-xs text-slate-300 mb-4 list-disc list-inside"></ul>
+
+        <label class="block text-xs uppercase tracking-wider mb-2 text-slate-400">Assignment brief (.txt)</label>
+        <input type="file" id="brief-file" class="block w-full text-xs mb-2 file:bg-indigo-600 file:text-white file:rounded file:px-3 file:py-1 file:border-0">
+        <button onclick="uploadDoc('/api/v1/ingestion/upload-brief', 'brief-file')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-xs font-bold py-2 rounded mb-4">Parse assignment</button>
+
+        <label class="block text-xs uppercase tracking-wider mb-2 text-slate-400">Roster CSV</label>
+        <input type="file" id="roster-file" class="block w-full text-xs mb-2 file:bg-indigo-600 file:text-white file:rounded file:px-3 file:py-1 file:border-0">
+        <button onclick="uploadDoc('/api/v1/ingestion/upload-roster', 'roster-file')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-xs font-bold py-2 rounded">Ingest roster</button>
+      </div>
+
+      <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">⚡ Scheduler</h2>
+        <button id="run-sched" class="w-full bg-amber-600 hover:bg-amber-700 text-xs font-bold py-2 rounded">Trigger policy engine</button>
+      </div>
+
+      <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">💬 Mock chat (demo)</h2>
+        <input id="chat-student" placeholder="student name" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs mb-2">
+        <input id="chat-msg" placeholder="message (try: stuck / done)" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-xs mb-2">
+        <button id="send-mock" class="w-full bg-indigo-600 hover:bg-indigo-700 text-xs font-bold py-2 rounded">Send mock message</button>
+      </div>
+    </div>
+
+    <!-- Middle -->
+    <div class="space-y-6">
+      <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">📡 Live updates (SSE)</h2>
+        <ul id="live-feed" class="text-xs space-y-2 max-h-72 overflow-auto">
+          <li class="text-slate-500 italic">Waiting for events…</li>
+        </ul>
+      </div>
+
+      <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">🔍 Last server response</h2>
+        <pre id="response-box" class="text-xs bg-slate-900 border border-slate-700 rounded p-3 overflow-auto max-h-72">—</pre>
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div>
+      <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+        <h2 class="text-lg font-bold text-indigo-300 mb-4">🕒 Audit timeline</h2>
+        <button id="refresh-audit" class="w-full bg-slate-700 hover:bg-slate-600 text-xs font-bold py-2 rounded mb-3">Refresh</button>
+        <ul id="audit-list" class="text-xs space-y-2 max-h-[32rem] overflow-auto"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ============================== Auth state ==============================
+const TOKEN_KEY = "sop_token";
+const USER_KEY = "sop_user";
+
+function getToken() { return localStorage.getItem(TOKEN_KEY); }
+function setSession(token, user) {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+function clearSession() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); }
+function authHeaders() {
+  const t = getToken();
+  return t ? { "Authorization": "Bearer " + t } : {};
+}
+
+async function api(path, opts = {}) {
+  const headers = { ...(opts.headers || {}), ...authHeaders() };
+  if (opts.body && !(opts.body instanceof FormData)) headers["Content-Type"] = "application/json";
+  const r = await fetch(path, { ...opts, headers });
+  const text = await r.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = text; }
+  document.getElementById("response-box").textContent = JSON.stringify(data, null, 2);
+  if (!r.ok) throw Object.assign(new Error("HTTP " + r.status), { status: r.status, data });
+  return data;
+}
+
+function showDashboard() {
+  document.getElementById("auth-section").classList.add("hidden");
+  document.getElementById("dashboard").classList.remove("hidden");
+  const u = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
+  document.getElementById("user-info").textContent = `${u.role || ""} · ${u.user_id?.slice(0,8) || ""}`;
+  connectSSE();
+  refreshAudit();
+}
+function showLogin() {
+  document.getElementById("auth-section").classList.remove("hidden");
+  document.getElementById("dashboard").classList.add("hidden");
+}
+
+// ============================== Tab switching ==============================
+document.getElementById("tab-login").onclick = () => {
+  document.getElementById("login-form").classList.remove("hidden");
+  document.getElementById("register-form").classList.add("hidden");
+  document.getElementById("tab-login").classList.replace("bg-slate-700", "bg-indigo-600");
+  document.getElementById("tab-register").classList.replace("bg-indigo-600", "bg-slate-700");
+};
+document.getElementById("tab-register").onclick = () => {
+  document.getElementById("register-form").classList.remove("hidden");
+  document.getElementById("login-form").classList.add("hidden");
+  document.getElementById("tab-register").classList.replace("bg-slate-700", "bg-indigo-600");
+  document.getElementById("tab-login").classList.replace("bg-indigo-600", "bg-slate-700");
+};
+
+// ============================== Login / register ==============================
+document.getElementById("login-form").onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const data = await api("/api/v1/auth/login", { method: "POST", body: JSON.stringify({
+      email: document.getElementById("login-email").value,
+      password: document.getElementById("login-password").value,
+    })});
+    setSession(data.access_token, data);
+    showDashboard();
+  } catch (err) {
+    document.getElementById("auth-msg").textContent = err.data?.detail || "Login failed";
+  }
+};
+
+document.getElementById("register-form").onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const data = await api("/api/v1/auth/register-school", { method: "POST", body: JSON.stringify({
+      school_name: document.getElementById("reg-school").value,
+      admin_name: document.getElementById("reg-admin-name").value,
+      admin_email: document.getElementById("reg-email").value,
+      admin_password: document.getElementById("reg-password").value,
+    })});
+    setSession(data.access_token, data);
+    showDashboard();
+  } catch (err) {
+    document.getElementById("auth-msg").textContent = err.data?.detail || "Registration failed";
+  }
+};
+
+document.getElementById("logout-btn").onclick = () => { clearSession(); showLogin(); };
+
+// ============================== Dashboard actions ==============================
+async function uploadDoc(endpoint, inputId) {
+  const file = document.getElementById(inputId).files[0];
+  const classroomId = document.getElementById("classroom-id").value;
+  if (!file) return alert("Pick a file first");
+  if (!classroomId) return alert("Set a classroom ID");
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    await api(`${endpoint}?classroom_id=${encodeURIComponent(classroomId)}`,
+              { method: "POST", body: fd });
+    refreshAudit();
+  } catch (e) { console.warn(e); }
+}
+
+document.getElementById("list-classes").onclick = async () => {
+  const list = await api("/api/v1/classrooms");
+  const ul = document.getElementById("class-list");
+  ul.innerHTML = list.map(c => `<li><code class="text-emerald-400">${c.id}</code> — ${c.name}</li>`).join("");
+};
+
+document.getElementById("run-sched").onclick = async () => {
+  await api("/api/v1/ingestion/trigger-scheduler", { method: "POST" });
+  refreshAudit();
+};
+
+document.getElementById("send-mock").onclick = async () => {
+  const studentName = document.getElementById("chat-student").value || "Test Student";
+  const msg = document.getElementById("chat-msg").value || "I am stuck";
+  await api("/api/v1/mock/webhook", { method: "POST", body: JSON.stringify({
+    student_id: "test-" + studentName.replace(/\s+/g,"-").toLowerCase(),
+    student_name: studentName,
+    message: msg,
+  })});
+  refreshAudit();
+};
+
+async function refreshAudit() {
+  try {
+    const data = await api("/api/v1/mock/audit-timeline?limit=50");
+    document.getElementById("audit-list").innerHTML = data.events.map(e => `
+      <li class="border-l-2 border-indigo-500 pl-2">
+        <div class="text-emerald-400 font-semibold">${e.event_type}</div>
+        <div class="text-slate-400">${e.time}</div>
+        <div class="text-slate-500">wf: <code>${e.workflow_id.slice(0,8)}</code> · actor: <code>${(e.actor_id||"").slice(0,8)}</code></div>
+      </li>
+    `).join("") || "<li class='text-slate-500 italic'>No events yet.</li>";
+  } catch (e) { console.warn(e); }
+}
+document.getElementById("refresh-audit").onclick = refreshAudit;
+
+// ============================== SSE ==============================
+let sseConn = null;
+function connectSSE() {
+  if (sseConn) return;
+  sseConn = new EventSource("/api/v1/mock/stream");
+  sseConn.addEventListener("student_update", ev => {
+    const data = JSON.parse(ev.data);
+    const ul = document.getElementById("live-feed");
+    const li = document.createElement("li");
+    li.className = "border-l-2 border-amber-500 pl-2";
+    li.innerHTML = `<div class="text-amber-400 font-semibold">${data.status}</div>
+                    <div class="text-slate-300">${data.student_name}: "${data.latest_message}"</div>`;
+    if (ul.firstChild?.classList?.contains("italic")) ul.innerHTML = "";
+    ul.prepend(li);
+  });
+}
+
+// ============================== Boot ==============================
+if (getToken()) showDashboard(); else showLogin();
+</script>
+</body>
+</html>
